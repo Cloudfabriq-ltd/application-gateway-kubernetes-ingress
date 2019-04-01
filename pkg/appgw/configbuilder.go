@@ -6,7 +6,7 @@
 package appgw
 
 import (
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-06-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-12-01/network"
 	"k8s.io/api/extensions/v1beta1"
 
 	"github.com/Azure/application-gateway-kubernetes-ingress/pkg/k8scontext"
@@ -82,6 +82,7 @@ func generateBackendID(ingress *v1beta1.Ingress, backend *v1beta1.IngressBackend
 			Name:      backendServiceName,
 		},
 		ServicePort: backendServicePort,
+		Ingress:     ingress,
 	}
 	return backendID
 }

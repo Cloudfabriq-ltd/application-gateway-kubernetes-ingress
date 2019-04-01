@@ -9,13 +9,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-06-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-12-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/golang/glog"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/Azure/application-gateway-kubernetes-ingress/pkg/annotations"
 	"github.com/Azure/application-gateway-kubernetes-ingress/pkg/utils"
 )
 
@@ -125,6 +126,7 @@ func (builder *appGwConfigBuilder) BackendHTTPSettingsCollection(ingressList [](
 				backendID.serviceKey(), backendID.ServicePort.String())
 			return builder, errors.New("more than one service-backend port binding is not allowed")
 		}
+
 		var uniquePair serviceBackendPortPair
 		serviceBackendPairs.ForEach(func(pairI interface{}) {
 			uniquePair = pairI.(serviceBackendPortPair)
@@ -132,14 +134,16 @@ func (builder *appGwConfigBuilder) BackendHTTPSettingsCollection(ingressList [](
 
 		builder.serviceBackendPairMap[backendID] = uniquePair
 
-		httpSettingsName := generateHTTPSettingsName(backendID.serviceFullName(), backendID.ServicePort.String(), uniquePair.BackendPort)
+		httpSettingsName := generateHTTPSettingsName(backendID.serviceFullName(), backendID.ServicePort.String(), uniquePair.BackendPort, backendID.Ingress.Name)
 		httpSettingsPort := uniquePair.BackendPort
+		backendPathPrefix := to.StringPtr(annotations.BackendPathPrefix(backendID.Ingress))
 		httpSettings := network.ApplicationGatewayBackendHTTPSettings{
 			Etag: to.StringPtr("*"),
 			Name: &httpSettingsName,
 			ApplicationGatewayBackendHTTPSettingsPropertiesFormat: &network.ApplicationGatewayBackendHTTPSettingsPropertiesFormat{
 				Protocol: network.HTTP,
 				Port:     &httpSettingsPort,
+				Path:     backendPathPrefix,
 			},
 		}
 		// other settings should come from annotations

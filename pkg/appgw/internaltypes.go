@@ -8,13 +8,15 @@ package appgw
 import (
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-06-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-12-01/network"
+	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 type backendIdentifier struct {
 	serviceIdentifier
 	ServicePort intstr.IntOrString
+	Ingress     *v1beta1.Ingress
 }
 
 type serviceBackendPortPair struct {
@@ -36,6 +38,10 @@ type secretIdentifier struct {
 	Namespace string
 	Name      string
 }
+
+const (
+	agPrefix = "k8s-ag-ingress"
+)
 
 // create xxx -> xxxconfiguration mappings to contain all the information
 type frontendListenerAzureConfig struct {
@@ -63,32 +69,32 @@ func getResourceKey(namespace, name string) string {
 	return fmt.Sprintf("%v/%v", namespace, name)
 }
 
-func generateHTTPSettingsName(serviceName string, servicePort string, backendPortNo int32) string {
-	return fmt.Sprintf("k8s-%v-%v-bp-%v", serviceName, servicePort, backendPortNo)
+func generateHTTPSettingsName(serviceName string, servicePort string, backendPortNo int32, ingress string) string {
+	return fmt.Sprintf("%s-%v-%v-bp-%v-%s", agPrefix, serviceName, servicePort, backendPortNo, ingress)
 }
 
 func generateAddressPoolName(serviceName string, servicePort string, backendPortNo int32) string {
-	return fmt.Sprintf("k8s-%v-%v-bp-%v-pool", serviceName, servicePort, backendPortNo)
+	return fmt.Sprintf("%s-%v-%v-bp-%v-pool", agPrefix, serviceName, servicePort, backendPortNo)
 }
 
 func generateFrontendPortName(port int32) string {
-	return fmt.Sprintf("k8s-fp-%v", port)
+	return fmt.Sprintf("%s-fp-%v", agPrefix, port)
 }
 
 func generateHTTPListenerName(frontendListenerID frontendListenerIdentifier) string {
-	return fmt.Sprintf("k8s-%v-%v-fl", frontendListenerID.HostName, frontendListenerID.FrontendPort)
+	return fmt.Sprintf("%s-%v-%v-fl", agPrefix, frontendListenerID.HostName, frontendListenerID.FrontendPort)
 }
 
 func generateURLPathMapName(frontendListenerID frontendListenerIdentifier) string {
-	return fmt.Sprintf("k8s-%v-%v-url", frontendListenerID.HostName, frontendListenerID.FrontendPort)
+	return fmt.Sprintf("%s-%v-%v-url", agPrefix, frontendListenerID.HostName, frontendListenerID.FrontendPort)
 }
 
 func generateRequestRoutingRuleName(frontendListenerID frontendListenerIdentifier) string {
-	return fmt.Sprintf("k8s-%v-%v-rr", frontendListenerID.HostName, frontendListenerID.FrontendPort)
+	return fmt.Sprintf("%s-%v-%v-rr", agPrefix, frontendListenerID.HostName, frontendListenerID.FrontendPort)
 }
 
-const defaultBackendHTTPSettingsName = "k8s-defaulthttpsetting"
-const defaultBackendAddressPoolName = "k8s-defaultaddresspool"
+const defaultBackendHTTPSettingsName = agPrefix + "-defaulthttpsetting"
+const defaultBackendAddressPoolName = agPrefix + "-defaultaddresspool"
 
 func defaultBackendHTTPSettings() network.ApplicationGatewayBackendHTTPSettings {
 	defHTTPSettingsName := defaultBackendHTTPSettingsName
