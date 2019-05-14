@@ -2,7 +2,7 @@
 
 FROM buildpack-deps:xenial
 
-RUN apt-get update && apt-get -y install apt-transport-https curl
+RUN apt-get update && apt-get -y install apt-transport-https curl ca-certificates openssl
 RUN curl -o /tmp/helm-v2.13.1-linux-amd64.tar.gz https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
 RUN tar -C /tmp/ -zxvf /tmp/helm-v2.13.1-linux-amd64.tar.gz \
     && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
@@ -31,8 +31,5 @@ RUN go get -u golang.org/x/tools/cmd/goimports
 
 RUN apt-get clean && apt-get update && apt-get install -y locales
 RUN locale-gen en_US.UTF-8
-
-# install glide
-RUN curl https://glide.sh/get | sh
 
 WORKDIR /gopath/src/github.com/Azure/application-gateway-kubernetes-ingress
