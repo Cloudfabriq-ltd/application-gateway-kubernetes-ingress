@@ -2,8 +2,4 @@ apiVersion: v1
 appVersion: "0.4.0"
 description: Use Azure Application Gateway as the ingress for an Azure Kubernetes Service cluster.
 name: ingress-azure
-<<<<<<< HEAD
-version: 0.4.0-rc1
-=======
 version: 0.4.0
->>>>>>> upstream/master
